@@ -1,7 +1,0 @@
-Component,Quantity,Purpose
-ESP32 Development Board,1,Main microcontroller
-HC-SR04 Ultrasonic Sensor,1,Measures object distance
-SG90 Servo Motor,1,Rotates the sensor
-I2C OLED Display,1,Displays distance readings
-Breadboard,1,Holds circuit connections
-Jumper Wires,As needed,Connects components
