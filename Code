@@ -1,0 +1,114 @@
+
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#include <ESP32Servo.h>
+
+#define SDA_PIN 32
+#define SCL_PIN 27
+#define TRIG_PIN 33
+#define ECHO_PIN 25
+#define SERVO_PIN 14
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+Servo radarServo;
+
+int angle = 0;
+int direction = 1;
+
+float getDistance() {
+  digitalWrite(TRIG_PIN, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+
+  long duration = pulseIn(ECHO_PIN, HIGH, 30000);
+
+  if (duration == 0) return -1;
+
+  return duration * 0.0343 / 2;
+}
+
+void setup() {
+  Serial.begin(115200);
+
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
+
+  Wire.begin(SDA_PIN, SCL_PIN);
+
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println("OLED not detected");
+    while (true) delay(100);
+  }
+
+  radarServo.setPeriodHertz(50);
+  radarServo.attach(SERVO_PIN, 500, 2400);
+  radarServo.write(0);
+
+  display.clearDisplay();
+  display.setTextColor(SSD1306_WHITE);
+  display.display();
+}
+
+void loop() {
+  radarServo.write(angle);
+
+  float distance = getDistance();
+
+  display.clearDisplay();
+
+  display.setTextColor(SSD1306_WHITE);
+
+  display.setTextSize(1);
+  display.setCursor(20, 2);
+  display.println("RADAR SYSTEM");
+
+  display.drawLine(0, 13, 128, 13, SSD1306_WHITE);
+
+  display.setCursor(5, 19);
+  display.print("DISTANCE");
+
+  display.setTextSize(2);
+  display.setCursor(5, 30);
+
+  if (distance < 0) {
+    display.print("---");
+  } else {
+    display.print(distance, 1);
+  }
+
+  display.setTextSize(1);
+  display.setCursor(80, 35);
+
+  if (distance >= 0) {
+    display.print("cm");
+  }
+
+  display.drawLine(0, 52, 128, 52, SSD1306_WHITE);
+
+  display.setCursor(5, 55);
+  display.print("ANGLE: ");
+  display.print(angle);
+  display.print(" deg");
+
+  display.display();
+
+  angle += direction;
+
+  if (angle >= 180) {
+    angle = 180;
+    direction = -1;
+  }
+
+  if (angle <= 0) {
+    angle = 0;
+    direction = 1;
+  }
+
+  delay(100);
+}
